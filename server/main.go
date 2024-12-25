@@ -23,11 +23,7 @@ func main() {
 	})
 
 	router.Route("/api", func(r chi.Router) {
-		r.Get("/users", handlers.ListUsersHandler(db))
-		r.Get("/users/{userId}", handlers.RetrieveUserHandler(db))
-		r.Post("/users", handlers.CreateUserHandler(db))
-		r.Patch("/users/{userId}", handlers.UpdateUserHandler(db))
-		r.Delete("/users/{userId}", handlers.DeleteUserHandler(db))
+		r.Post("/users", handlers.CreateUserHandler)
 	})
 
 	serverPort := os.Getenv("SERVER_PORT")
