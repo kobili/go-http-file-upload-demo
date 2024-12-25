@@ -14,6 +14,9 @@ func CreateUserHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	username := req.FormValue("username")
+	saveUser(username)
+
 	file, fileHeader, err := req.FormFile("profilePic")
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to retrieve key `profilePic` from form data: %v", err), 500)
@@ -30,6 +33,10 @@ func CreateUserHandler(w http.ResponseWriter, req *http.Request) {
 	saveFile(&file)
 
 	w.Write(buf)
+}
+
+func saveUser(username string) {
+	// Placeholder function
 }
 
 func saveFile(file *multipart.File) {
