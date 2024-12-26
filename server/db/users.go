@@ -4,17 +4,11 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-
-	"github.com/lib/pq"
 )
 
 type UserEntity struct {
-	UserId    string
-	Email     string
-	FirstName string
-	LastName  string
-	Age       int32
-	Aliases   []string
+	UserId   string
+	Username string
 }
 
 func GetUsers(db *sql.DB, ctx context.Context) ([]UserEntity, error) {
@@ -24,11 +18,7 @@ func GetUsers(db *sql.DB, ctx context.Context) ([]UserEntity, error) {
 		ctx,
 		`SELECT
 			user_id,
-			email,
-			first_name,
-			last_name,
-			age,
-			aliases
+			username
 		FROM users`,
 	)
 	if err != nil {
@@ -39,7 +29,7 @@ func GetUsers(db *sql.DB, ctx context.Context) ([]UserEntity, error) {
 	for rows.Next() {
 		var user UserEntity
 		if err := rows.Scan(
-			&user.UserId, &user.Email, &user.FirstName, &user.LastName, &user.Age, pq.Array(&user.Aliases),
+			&user.UserId, &user.Username,
 		); err != nil {
 			return nil, fmt.Errorf("GetUsers: %w", err)
 		}
@@ -57,21 +47,13 @@ func GetUserById(db *sql.DB, ctx context.Context, userId string) (*UserEntity, e
 		ctx,
 		`SELECT
 			user_id,
-			email,
-			first_name,
-			last_name,
-			age,
-			aliases
+			username
 		FROM users
 		WHERE user_id = $1`,
 		userId,
 	).Scan(
 		&user.UserId,
-		&user.Email,
-		&user.FirstName,
-		&user.LastName,
-		&user.Age,
-		pq.Array(&user.Aliases),
+		&user.Username,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("GetUserById(%s): %w", userId, err)
@@ -80,81 +62,26 @@ func GetUserById(db *sql.DB, ctx context.Context, userId string) (*UserEntity, e
 	return &user, nil
 }
 
-type UpdateUserPayload struct {
-	Email     string    `json:"email"`
-	FirstName string    `json:"firstName"`
-	LastName  string    `json:"lastName"`
-	Age       int32     `json:"age"`
-	Aliases   *[]string `json:"aliases"`
+type CreateUserPayload struct {
+	Username string `json:"username"`
 }
 
-func CreateUser(db *sql.DB, ctx context.Context, data UpdateUserPayload) (*UserEntity, error) {
+func CreateUser(db *sql.DB, ctx context.Context, data CreateUserPayload) (*UserEntity, error) {
 	var user UserEntity
 	err := db.QueryRowContext(
 		ctx,
-		`INSERT INTO users (email, first_name, last_name, age, aliases)
-		VALUES ($1, $2, $3, $4, $5)
+		`INSERT INTO users (username)
+		VALUES ($1)
 		RETURNING
 			user_id,
-			email,
-			first_name,
-			last_name,
-			age,
-			aliases`,
-		data.Email,
-		data.FirstName,
-		data.LastName,
-		data.Age,
-		pq.Array(data.Aliases),
+			username`,
+		data.Username,
 	).Scan(
 		&user.UserId,
-		&user.Email,
-		&user.FirstName,
-		&user.LastName,
-		&user.Age,
-		pq.Array(&user.Aliases),
+		&user.Username,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("CreateUser - Could not create user: %w", err)
-	}
-
-	return &user, nil
-}
-
-func UpdateUser(db *sql.DB, ctx context.Context, userId string, data UpdateUserPayload) (*UserEntity, error) {
-	var user UserEntity
-	err := db.QueryRowContext(
-		ctx,
-		`UPDATE users
-		SET email = $1,
-			first_name = $2,
-			last_name = $3,
-			age = $4,
-			aliases = $5
-		WHERE user_id = $6
-		RETURNING
-			user_id,
-			email,
-			first_name,
-			last_name,
-			age,
-			aliases`,
-		data.Email,
-		data.FirstName,
-		data.LastName,
-		data.Age,
-		pq.Array(data.Aliases),
-		userId,
-	).Scan(
-		&user.UserId,
-		&user.Email,
-		&user.FirstName,
-		&user.LastName,
-		&user.Age,
-		pq.Array(&user.Aliases),
-	)
-	if err != nil {
-		return nil, fmt.Errorf("UpdateUser - Could not update user: %w", err)
 	}
 
 	return &user, nil

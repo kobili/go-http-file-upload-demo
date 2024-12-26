@@ -23,7 +23,7 @@ func main() {
 	})
 
 	router.Route("/api", func(r chi.Router) {
-		r.Post("/users", handlers.CreateUserHandler)
+		r.Post("/users", handlers.CreateUserHandler(db))
 	})
 
 	serverPort := os.Getenv("SERVER_PORT")
