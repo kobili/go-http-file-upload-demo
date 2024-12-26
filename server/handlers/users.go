@@ -61,6 +61,7 @@ func CreateProfilePicHandler(db *sql.DB, storage_backend storage.StorageBackend)
 	fn := func(w http.ResponseWriter, req *http.Request) {
 		userId := chi.URLParam(req, "userId")
 
+		// parse the multipart/form-data
 		err := req.ParseMultipartForm(200 << 20)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("Failed parsing request body: %v", err), 500)
@@ -73,6 +74,7 @@ func CreateProfilePicHandler(db *sql.DB, storage_backend storage.StorageBackend)
 			return
 		}
 
+		// persist the file
 		userFileDir := getProfilePicFilePath(userId)
 
 		timestamp := strconv.FormatInt(time.Now().UnixNano(), 10)
@@ -84,12 +86,14 @@ func CreateProfilePicHandler(db *sql.DB, storage_backend storage.StorageBackend)
 			return
 		}
 
+		// Save a record of the photo to the database
 		photo, err := sdb.CreateProfilePic(db, req.Context(), userId, filePath)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("Failed to save photo to db: %v", err), 500)
 			return
 		}
 
+		// generate the response
 		resBody, err := json.Marshal(ProfilePicDto{
 			Id:       photo.Id,
 			FilePath: photo.FilePath,
@@ -120,18 +124,21 @@ func RetrieveProfilePicHandler(db *sql.DB, storage_backend storage.StorageBacken
 	fn := func(w http.ResponseWriter, req *http.Request) {
 		id := chi.URLParam(req, "id")
 
+		// Retrieve photo information from db
 		picEntity, err := sdb.GetProfilePic(db, req.Context(), id)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("Failed to retrieve image info: %v", err), 500)
 			return
 		}
 
+		// Retrieve the photo data from the storage backend
 		buf, err := storage_backend.RetrieveFile(picEntity.FilePath)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("Error reading file data: %v", err), 500)
 			return
 		}
 
+		// send the data in the response
 		w.Write(buf)
 	}
 

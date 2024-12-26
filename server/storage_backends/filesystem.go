@@ -2,13 +2,10 @@ package storage_backends
 
 import (
 	"bufio"
-	"fmt"
 	"io"
 	"mime/multipart"
 	"os"
 	"path/filepath"
-	"strconv"
-	"time"
 )
 
 type StorageBackend interface {
@@ -23,24 +20,27 @@ func NewFileSystemStorageBackend() *FileSystemStorageBackend {
 	return &FileSystemStorageBackend{}
 }
 
+/*
+Save the given multipart.File to the local file system under the directory given by path and with the name given by fileName.
+Returns the path to the new file.
+*/
 func (backend *FileSystemStorageBackend) SaveFile(file multipart.File, path string, fileName string) (string, error) {
-
+	// create the directory if it doesn't exist
 	err := os.MkdirAll(path, os.ModePerm)
 	if err != nil {
 		return "", err
 	}
 
-	timestamp := strconv.FormatInt(time.Now().UnixNano(), 10)
-
-	newFileName := filepath.Join(path, fmt.Sprintf("%s_%s", timestamp, fileName))
+	// Create a new file
+	newFileName := filepath.Join(path, fileName)
 	newFile, err := os.Create(newFileName)
 	if err != nil {
 		return "", err
 	}
 	defer newFile.Close()
 
+	// Copy the data from the multipart.File to the new File
 	buf := make([]byte, 1024)
-
 	for {
 		n, err := file.Read(buf)
 		if err != nil && err != io.EOF {
@@ -60,6 +60,9 @@ func (backend *FileSystemStorageBackend) SaveFile(file multipart.File, path stri
 	return newFileName, nil
 }
 
+/*
+Retrieve the binary data of the file located at filePath.
+*/
 func (backend *FileSystemStorageBackend) RetrieveFile(filePath string) ([]byte, error) {
 	file, err := os.Open(filePath)
 	if err != nil {
