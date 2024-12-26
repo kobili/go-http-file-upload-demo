@@ -11,6 +11,7 @@ import (
 type StorageBackend interface {
 	SaveFile(file multipart.File, path string, fileName string) (string, error)
 	RetrieveFile(filePath string) ([]byte, error)
+	DeleteFile(filePath string) error
 }
 
 type FileSystemStorageBackend struct {
@@ -82,4 +83,15 @@ func (backend *FileSystemStorageBackend) RetrieveFile(filePath string) ([]byte, 
 	}
 
 	return buf, nil
+}
+
+/*
+Remove the file given by filePath.
+*/
+func (backend *FileSystemStorageBackend) DeleteFile(filePath string) error {
+	err := os.Remove(filePath)
+	if err != nil {
+		return err
+	}
+	return nil
 }

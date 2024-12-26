@@ -29,6 +29,7 @@ func main() {
 		r.Post("/users", handlers.CreateUserHandler(db))
 		r.Post("/users/{userId}/profile_pic", handlers.CreateProfilePicHandler(db, storage_backend))
 		r.Get("/users/{userId}/profile_pic/{id}", handlers.RetrieveProfilePicHandler(db, storage_backend))
+		r.Delete("/users/{userId}/profile_pic/{id}", handlers.DeleteProfilePicHandler(db, storage_backend))
 	})
 
 	serverPort := os.Getenv("SERVER_PORT")

@@ -144,3 +144,34 @@ func RetrieveProfilePicHandler(db *sql.DB, storage_backend storage.StorageBacken
 
 	return http.HandlerFunc(fn)
 }
+
+func DeleteProfilePicHandler(db *sql.DB, storage_backend storage.StorageBackend) http.HandlerFunc {
+	fn := func(w http.ResponseWriter, req *http.Request) {
+		id := chi.URLParam(req, "id")
+
+		// Retrieve photo info from db
+		picEntity, err := sdb.GetProfilePic(db, req.Context(), id)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Failed to retrieve image info: %v", err), 500)
+			return
+		}
+
+		// Delete the file from persistent storage
+		err = storage_backend.DeleteFile(picEntity.FilePath)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Error removing file: %v", err), 500)
+			return
+		}
+
+		// Remove the db record
+		err = sdb.DeleteProfilePic(db, req.Context(), id)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Failed to delete db entry for photo: %v", err), 500)
+			return
+		}
+
+		w.WriteHeader(http.StatusNoContent)
+	}
+
+	return http.HandlerFunc(fn)
+}

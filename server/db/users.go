@@ -142,3 +142,16 @@ func GetProfilePic(db *sql.DB, ctx context.Context, id string) (*ProfilePictureE
 
 	return &entity, nil
 }
+
+func DeleteProfilePic(db *sql.DB, ctx context.Context, id string) error {
+	_, err := db.ExecContext(
+		ctx,
+		`DELETE FROM profile_pictures WHERE id = $1`,
+		id,
+	)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
