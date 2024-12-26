@@ -1,11 +1,11 @@
 package handlers
 
 import (
+	"bufio"
 	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"mime/multipart"
 	"net/http"
 	"os"
@@ -75,11 +75,7 @@ func CreateProfilePicHandler(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		fileName := fileHeader.Filename
-		log.Println(fileName)
-
 		userFileDir := getProfilePicFilePath(userId)
-		log.Println(userFileDir)
 
 		filePath, err := saveFile(file, fileHeader, userFileDir)
 		if err != nil {
@@ -154,4 +150,40 @@ func saveFile(file multipart.File, fileHeader *multipart.FileHeader, path string
 	}
 
 	return newFileName, nil
+}
+
+func RetrieveProfilePicHandler(db *sql.DB) http.HandlerFunc {
+	fn := func(w http.ResponseWriter, req *http.Request) {
+		id := chi.URLParam(req, "id")
+
+		picEntity, err := sdb.GetProfilePic(db, req.Context(), id)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Failed to retrieve image info: %v", err), 500)
+			return
+		}
+
+		file, err := os.Open(picEntity.FilePath)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Failed to open file: %v", err), 500)
+			return
+		}
+		defer file.Close()
+
+		fileInfo, err := file.Stat()
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Error reading file info: %v", err), 500)
+			return
+		}
+
+		buf := make([]byte, fileInfo.Size())
+		_, err = bufio.NewReader(file).Read(buf)
+		if err != nil && err != io.EOF {
+			http.Error(w, fmt.Sprintf("Error reading file data: %v", err), 500)
+			return
+		}
+
+		w.Write(buf)
+	}
+
+	return http.HandlerFunc(fn)
 }

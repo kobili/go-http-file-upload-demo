@@ -127,3 +127,18 @@ func CreateProfilePic(db *sql.DB, ctx context.Context, userId string, filePath s
 
 	return &entity, nil
 }
+
+func GetProfilePic(db *sql.DB, ctx context.Context, id string) (*ProfilePictureEntity, error) {
+	var entity ProfilePictureEntity
+
+	err := db.QueryRowContext(
+		ctx,
+		`SELECT id, file_path, user_id FROM profile_pictures WHERE id = $1`,
+		id,
+	).Scan(&entity.Id, &entity.FilePath, &entity.UserId)
+	if err != nil {
+		return nil, err
+	}
+
+	return &entity, nil
+}
