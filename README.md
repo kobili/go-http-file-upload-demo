@@ -1,37 +1,17 @@
-Check out the other branches for a MongoDB template.
+# Go multipart/form-data image upload handling
 
-# GO + Docker REST API Template
+This toy API demonstrates how to handle multipart/form-data requests with images in a Go HTTP server.
 
-A template of a REST API written in Go with a development environment run using Docker.
+Currently, the uploaded images are stored on the local file system.
 
-## Requirements:
-- [Docker](https://www.docker.com/products/docker-desktop/)
-    - Docker Compose
-- [Go](https://go.dev/)
-- [Make](https://www.gnu.org/software/make/)
-
-## Local Dev Environment
-### Running the server
-```
-make start-server
-```
-- This will use Docker Compose to spool up all the required Docker containers
-- The Go server will be run using [air](https://github.com/cosmtrek/air) which automatically restarts the server when code changes are made
-- Server environment variables are located in the `docker-compose.yaml` file.
-
-## Database Migrations
-Database migrations are managed by [Golang-Migrate](https://github.com/golang-migrate/migrate) using docker containers. You may need to configure the Make scripts depending on your Docker network and Postgres configurations defined in the `docker-compose.yaml` file.
-
-### Creating Migrations
-```
-make mm migration_name=
-```
-- Migrations will be created in `migrations/sql`
-### Apply all migrations
-```
-make m
-```
-### Revert a single migration
-```
-make migrate-down
-```
+### Endpoints
+- `POST localhost:4321/api/users`
+    - All photos in this toy app are associated with a user
+    - in the request body, provide a JSON object with a `username` key with a `string` value
+- `POST localhost:4321/api/users/<userId>/profile_pic`
+    - Create a new photo for the given `userId`
+    - provide the photo file under the `profilePic` key in a `multipart/form-data` encoded request body
+- `GET localhost:4321/api/users/<userId>/profile_pic/<imageId>`
+    - Retrieve an uploaded image
+- `DELETE localhost:4321/api/users/<userId>/profile_pic/<imageId>`
+    - Delete an uploaded image
