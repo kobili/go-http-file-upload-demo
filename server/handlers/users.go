@@ -1,12 +1,9 @@
 package handlers
 
 import (
-	"bufio"
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"io"
-	"mime/multipart"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -16,6 +13,7 @@ import (
 	"github.com/go-chi/chi/v5"
 
 	sdb "server/db"
+	storage "server/storage_backends"
 )
 
 type UserDto struct {
@@ -59,7 +57,7 @@ type ProfilePicDto struct {
 	UserId   string `json:"userId"`
 }
 
-func CreateProfilePicHandler(db *sql.DB) http.HandlerFunc {
+func CreateProfilePicHandler(db *sql.DB, storage_backend storage.StorageBackend) http.HandlerFunc {
 	fn := func(w http.ResponseWriter, req *http.Request) {
 		userId := chi.URLParam(req, "userId")
 
@@ -77,7 +75,10 @@ func CreateProfilePicHandler(db *sql.DB) http.HandlerFunc {
 
 		userFileDir := getProfilePicFilePath(userId)
 
-		filePath, err := saveFile(file, fileHeader, userFileDir)
+		timestamp := strconv.FormatInt(time.Now().UnixNano(), 10)
+		newFileName := fmt.Sprintf("%s_%s", timestamp, fileHeader.Filename)
+
+		filePath, err := storage_backend.SaveFile(file, userFileDir, newFileName)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("Failed to save file: %v", err), 500)
 			return
@@ -115,44 +116,7 @@ func getProfilePicFilePath(userId string) string {
 	return filepath.Join(".", uploadsDir, userId, "profile_pics/")
 }
 
-func saveFile(file multipart.File, fileHeader *multipart.FileHeader, path string) (string, error) {
-
-	err := os.MkdirAll(path, os.ModePerm)
-	if err != nil {
-		return "", err
-	}
-
-	timestamp := strconv.FormatInt(time.Now().UnixNano(), 10)
-
-	newFileName := filepath.Join(path, fmt.Sprintf("%s_%s", timestamp, fileHeader.Filename))
-	newFile, err := os.Create(newFileName)
-	if err != nil {
-		return "", err
-	}
-	defer newFile.Close()
-
-	buf := make([]byte, 1024)
-
-	for {
-		n, err := file.Read(buf)
-		if err != nil && err != io.EOF {
-			return "", err
-		}
-
-		if n == 0 {
-			break
-		}
-
-		_, err = newFile.Write(buf[:n])
-		if err != nil {
-			return "", err
-		}
-	}
-
-	return newFileName, nil
-}
-
-func RetrieveProfilePicHandler(db *sql.DB) http.HandlerFunc {
+func RetrieveProfilePicHandler(db *sql.DB, storage_backend storage.StorageBackend) http.HandlerFunc {
 	fn := func(w http.ResponseWriter, req *http.Request) {
 		id := chi.URLParam(req, "id")
 
@@ -162,22 +126,8 @@ func RetrieveProfilePicHandler(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		file, err := os.Open(picEntity.FilePath)
+		buf, err := storage_backend.RetrieveFile(picEntity.FilePath)
 		if err != nil {
-			http.Error(w, fmt.Sprintf("Failed to open file: %v", err), 500)
-			return
-		}
-		defer file.Close()
-
-		fileInfo, err := file.Stat()
-		if err != nil {
-			http.Error(w, fmt.Sprintf("Error reading file info: %v", err), 500)
-			return
-		}
-
-		buf := make([]byte, fileInfo.Size())
-		_, err = bufio.NewReader(file).Read(buf)
-		if err != nil && err != io.EOF {
 			http.Error(w, fmt.Sprintf("Error reading file data: %v", err), 500)
 			return
 		}
