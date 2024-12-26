@@ -1,1 +1,2 @@
+DROP TABLE IF EXISTS profile_pictures;
 DROP TABLE IF EXISTS users;
