@@ -2,6 +2,7 @@
 server/tmp/
 pgData/
 mongoData/
+uploads/
 
 **/node_modules
 dist

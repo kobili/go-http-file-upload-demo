@@ -39,6 +39,7 @@ services:
       - SERVER_PORT=4321
     volumes:
       - ./server:/app
+      - ./uploads:/app/uploads
     networks:
       - go-server
 

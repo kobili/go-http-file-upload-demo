@@ -99,3 +99,31 @@ func DeleteUser(db *sql.DB, ctx context.Context, userId string) error {
 
 	return nil
 }
+
+type ProfilePictureEntity struct {
+	Id       int64
+	FilePath string
+	UserId   string
+}
+
+func CreateProfilePic(db *sql.DB, ctx context.Context, userId string, filePath string) (*ProfilePictureEntity, error) {
+	var entity ProfilePictureEntity
+
+	err := db.QueryRowContext(
+		ctx,
+		`INSERT INTO profile_pictures
+		(file_path, user_id)
+		VALUES ($1, $2)
+		RETURNING
+			id, file_path, user_id`,
+		filePath,
+		userId,
+	).Scan(
+		&entity.Id, &entity.FilePath, &entity.UserId,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return &entity, nil
+}

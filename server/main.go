@@ -24,6 +24,7 @@ func main() {
 
 	router.Route("/api", func(r chi.Router) {
 		r.Post("/users", handlers.CreateUserHandler(db))
+		r.Post("/users/{userId}/profile_pic", handlers.CreateProfilePicHandler(db))
 	})
 
 	serverPort := os.Getenv("SERVER_PORT")
