@@ -27,6 +27,7 @@ func main() {
 
 	router.Route("/api", func(r chi.Router) {
 		r.Post("/users", handlers.CreateUserHandler(db))
+		r.Get("/users/{userId}", handlers.RetrieveUserHandler(db))
 		r.Post("/users/{userId}/profile_pic", handlers.CreateProfilePicHandler(db, storage_backend))
 		r.Get("/users/{userId}/profile_pic/{id}", handlers.RetrieveProfilePicHandler(db, storage_backend))
 		r.Delete("/users/{userId}/profile_pic/{id}", handlers.DeleteProfilePicHandler(db, storage_backend))
