@@ -11,9 +11,9 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/kobili/storage-backends/backends"
 
 	sdb "server/db"
-	storage "server/storage_backends"
 )
 
 type ProfilePicDto struct {
@@ -22,7 +22,7 @@ type ProfilePicDto struct {
 	UserId   string `json:"userId"`
 }
 
-func CreateProfilePicHandler(db *sql.DB, storage_backend storage.StorageBackend) http.HandlerFunc {
+func CreateProfilePicHandler(db *sql.DB, storage_backend backends.StorageBackend) http.HandlerFunc {
 	fn := func(w http.ResponseWriter, req *http.Request) {
 		userId := chi.URLParam(req, "userId")
 
@@ -85,7 +85,7 @@ func getProfilePicFilePath(userId string) string {
 	return filepath.Join(".", uploadsDir, userId, "profile_pics/")
 }
 
-func RetrieveProfilePicHandler(db *sql.DB, storage_backend storage.StorageBackend) http.HandlerFunc {
+func RetrieveProfilePicHandler(db *sql.DB, storage_backend backends.StorageBackend) http.HandlerFunc {
 	fn := func(w http.ResponseWriter, req *http.Request) {
 		id := chi.URLParam(req, "id")
 
@@ -110,7 +110,7 @@ func RetrieveProfilePicHandler(db *sql.DB, storage_backend storage.StorageBacken
 	return http.HandlerFunc(fn)
 }
 
-func DeleteProfilePicHandler(db *sql.DB, storage_backend storage.StorageBackend) http.HandlerFunc {
+func DeleteProfilePicHandler(db *sql.DB, storage_backend backends.StorageBackend) http.HandlerFunc {
 	fn := func(w http.ResponseWriter, req *http.Request) {
 		id := chi.URLParam(req, "id")
 

@@ -6,10 +6,10 @@ import (
 	"os"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/kobili/storage-backends/backends"
 
 	"server/db"
 	"server/handlers"
-	"server/storage_backends"
 )
 
 func main() {
@@ -17,7 +17,7 @@ func main() {
 	db := db.ConnectToDB()
 	defer db.Close()
 
-	storage_backend := storage_backends.NewFileSystemStorageBackend()
+	storage_backend := backends.NewFileSystemStorageBackend()
 
 	router := chi.NewRouter()
 

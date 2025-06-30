@@ -5,7 +5,7 @@ go 1.23.3
 require (
 	github.com/go-chi/chi/v5 v5.0.11
 	github.com/jackc/pgx/v5 v5.5.3
-	github.com/lib/pq v1.10.9
+	github.com/kobili/storage-backends v0.1.3
 )
 
 require (
